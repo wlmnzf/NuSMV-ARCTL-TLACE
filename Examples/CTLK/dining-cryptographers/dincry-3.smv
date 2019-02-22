@@ -1,0 +1,299 @@
+-- Franco, 16/08/2004
+
+-- Dining Cryptographers example with 3 crypt.; it's not the best
+-- encoding, but it is used to compare the two tools mcdis and NuSMV.
+
+include(../nu-ctlk.m4)
+
+-- Three cryptographers; MODULE main takes care of init states 
+-- I had problems using arrays, hence I explicitly declare a module
+-- for each cryptographer.
+
+
+MODULE dc1(ENV,payers,coins,dincry2-action,dincry3-action)
+
+  VAR mycoins: 	{empty,equal,different};
+  VAR oddcount: {empty,even,odd};
+  VAR payer: 	{empty,yes,no};
+
+  IVAR action: 	{nothing,sayequal,saydifferent};
+
+  AGENT(me,mycoins,oddcount,payer)
+
+  INIT
+  	mycoins=empty & oddcount=empty & payer=empty
+
+-- protocol, valid for every kind of transition
+  TTRANS(action = 	case
+  						(!(mycoins=empty) & (oddcount=empty)):
+  							case
+		       					((mycoins=equal) & (payer=yes)): saydifferent;
+		      					((mycoins=equal) & (payer=no)): sayequal;
+		       					((mycoins=different) & (payer=yes)): sayequal;
+		       					((mycoins=different) & (payer=no)): saydifferent;
+                      		esac;
+                		1: nothing;
+            		esac
+    )
+-- Evolution function
+  TTRANS(next(payer) =	case
+                    		((payer=empty) & (oddcount=empty) & (mycoins=empty)):
+                    			case
+									payers[0]: yes;
+                                    1 : no;	 
+				       			esac;
+                          	1: payer;
+                       	esac
+    )
+  TTRANS(next(mycoins) =	case
+			    				((mycoins=empty) & (payer != empty) & (oddcount=empty)):
+			    					case
+                                 		(coins[0] xor coins[1]) : different;
+                                  		1 : equal;
+                                	esac;
+                            	1: mycoins;
+                           	esac
+    )
+  TTRANS(next(oddcount) =	case
+                            	(!(mycoins=empty) & (oddcount=empty) & !(payer=empty)):
+			       					case
+			        					((	(action=saydifferent) +
+                                  			(dincry2-action=saydifferent) +
+                                  			(dincry3-action=saydifferent)) mod 2) = 1: odd;
+			         					1: even;
+			      					esac;
+                             	1: oddcount; 
+                        	esac
+    )
+
+
+MODULE dc2(ENV,payers,coins,dincry3-action,dincry1-action)
+
+  VAR mycoins: 	{empty,equal,different};
+  VAR oddcount: {empty,even,odd};
+  VAR payer: 	{empty,yes,no};
+
+  IVAR action: 	{nothing,sayequal,saydifferent};
+
+  AGENT(me,mycoins,oddcount,payer)
+
+  INIT
+  	mycoins=empty & oddcount=empty & payer=empty
+
+-- protocol, valid for every kind of transition
+  TTRANS(action = 	case
+  						(!(mycoins=empty) & (oddcount=empty)):
+  							case
+		       					((mycoins=equal) & (payer=yes)): saydifferent;
+		      					((mycoins=equal) & (payer=no)): sayequal;
+		       					((mycoins=different) & (payer=yes)): sayequal;
+		       					((mycoins=different) & (payer=no)): saydifferent;
+                      		esac;
+                		1: nothing;
+            		esac
+    )
+-- Evolution function
+  TTRANS(next(payer) =	case
+                    		((payer=empty) & (oddcount=empty) & (mycoins=empty)):
+                    			case
+									payers[1]: yes;
+                                    1 : no;	 
+				       			esac;
+                          	1: payer;
+                       	esac
+    )
+  TTRANS(next(mycoins) =	case
+			    				((mycoins=empty) & (payer != empty) & (oddcount=empty)):
+			    					case
+                                 		(coins[1] xor coins[2]) : different;
+                                  		1 : equal;
+                                	esac;
+                            	1: mycoins;
+                           	esac
+    )
+  TTRANS(next(oddcount) =	case
+                            	(!(mycoins=empty) & (oddcount=empty) & !(payer=empty)):
+			       					case
+			        					((	(action=saydifferent) +
+                                  			(dincry3-action=saydifferent) +
+                                  			(dincry1-action=saydifferent)) mod 2) = 1: odd;
+			         					1: even;
+			      					esac;
+                             	1: oddcount; 
+                        	esac
+    )
+
+
+MODULE dc3(ENV,payers,coins,dincry1-action,dincry2-action)
+
+  VAR mycoins: 	{empty,equal,different};
+  VAR oddcount: {empty,even,odd};
+  VAR payer: 	{empty,yes,no};
+
+  IVAR action: 	{nothing,sayequal,saydifferent};
+
+  AGENT(me,mycoins,oddcount,payer)
+
+  INIT
+  	mycoins=empty & oddcount=empty & payer=empty
+
+-- protocol, valid for every kind of transition
+  TTRANS(action = 	case
+  						(!(mycoins=empty) & (oddcount=empty)):
+  							case
+		       					((mycoins=equal) & (payer=yes)): saydifferent;
+		      					((mycoins=equal) & (payer=no)): sayequal;
+		       					((mycoins=different) & (payer=yes)): sayequal;
+		       					((mycoins=different) & (payer=no)): saydifferent;
+                      		esac;
+                		1: nothing;
+            		esac
+    )
+-- Evolution function
+  TTRANS(next(payer) =	case
+                    		((payer=empty) & (oddcount=empty) & (mycoins=empty)):
+                    			case
+									payers[2]: yes;
+                                    1 : no;	 
+				       			esac;
+                          	1: payer;
+                       	esac
+    )
+  TTRANS(next(mycoins) =	case
+			    				((mycoins=empty) & (payer != empty) & (oddcount=empty)):
+			    					case
+                                 		(coins[2] xor coins[0]) : different;
+                                  		1 : equal;
+                                	esac;
+                            	1: mycoins;
+                           	esac
+    )
+  TTRANS(next(oddcount) =	case
+                            	(!(mycoins=empty) & (oddcount=empty) & !(payer=empty)):
+			       					case
+			        					((	(action=saydifferent) +
+                                  			(dincry1-action=saydifferent) +
+                                  			(dincry2-action=saydifferent)) mod 2) = 1: odd;
+			         					1: even;
+			      					esac;
+                             	1: oddcount; 
+                        	esac
+    )
+
+
+MODULE main
+
+VAR_ENV
+
+VAR
+	dincry1 : dc1(ENV,payers,coins,dincry2.action,dincry3.action);
+	dincry2 : dc2(ENV,payers,coins,dincry3.action,dincry1.action);
+  	dincry3 : dc3(ENV,payers,coins,dincry1.action,dincry2.action);
+
+	coins : array 0..2 of boolean;
+	payers : array 0..3 of boolean;
+
+INIT
+  	coins[0] in {0,1} & coins[1] in {0,1} & coins[2] in {0,1} &
+  	payers[0] + payers[1] + payers[2] + payers[3] = 1
+
+DEFINE n_odd := (dincry1.oddcount in {odd} );
+DEFINE n_even := (dincry1.oddcount in {even} );
+
+
+
+
+-- Just a check (FALSE)
+-- SPEC TAG(dincry3.mycoins=equal -> KK(dincry1.me, dincry3.mycoins=equal))
+
+-- TRUE
+-- SPEC TAG(dincry3.mycoins=equal -> KK(dincry3.me, dincry3.mycoins=equal))
+
+-- TRUE
+ SPEC ( TAG((n_odd & !(dincry1.payer=yes)) -> KK(dincry1.me,(dincry2.payer=yes) | (dincry3.payer=yes))))
+
+-- TRUE
+-- SPEC (TAG((n_even) -> KK(dincry1.me,(dincry2.payer=no) & (dincry3.payer=no))))
+
+-- FALSE
+-- SPEC ( TAG((n_even & !(dincry1.payer=yes)) -> KK(dincry1.me,((dincry2.payer=yes) | (dincry3.payer=yes)))))
+
+-- FALSE
+-- SPEC ( TAG((n_even & !(dincry1.payer=yes)) -> ((dincry2.payer=yes) | (dincry3.payer=yes))))
+
+-- TRUE
+-- SPEC ( TAG(REACHABLE))
+
+-- FALSE
+-- SPEC ( TAG((!(dincry1.payer=yes)) -> KK(dincry1.me,(dincry2.payer=yes))))
+
+-- FALSE
+-- SPEC ( TAG(KK(dincry1.me,(dincry2.payer=yes))))
+
+
+
+
+
+
+
+-- ----- ----- ----- EVALUATION EXAMPLES ----- ----- -----
+
+-- ----- ----- DIS- AND CONJUNCTIONS ----- -----
+
+-- SPEC ( ( TEF( dincry1.payer=yes | dincry1.payer=no ) ) -> ( TAF( dincry1.payer=yes ) ) )
+
+-- ----- ----- EU ----- -----
+
+-- SPEC !( TEU( !KK(dincry1.me, (dincry2.oddcount=equal) ) , dincry1.oddcount!=empty ) )
+
+-- ----- ----- EG ----- -----
+
+-- SPEC TAF( KK(dincry1.me, (dincry1.oddcount=equal)) )
+
+-- ----- ----- FULL ----- -----
+
+-- SPEC !( TEU( !KK( dincry1.me, (dincry2.oddcount=yes) ) , ( TEG( dincry2.mycoins=equal )  & TEF( dincry2.payer=yes) ) ) )
+
+
+
+
+
+
+
+-- ----- ----- ----- MOTIVATIONAL EXAMPLES ----- ----- -----
+
+-- ----- ----- DISJUNCTIONS AND CONJUNCTIONS ----- -----
+
+-- SPEC ( TEF(dincry1.oddcount=even | dincry1.oddcount=odd) -> TAF(dincry1.oddcount=odd) )
+
+-- ----- ----- EU ----- -----
+
+-- SPEC !TEU( !KK(dincry1.me, (dincry2.oddcount=even) ) , (!KK(dincry1.me, (dincry2.oddcount=empty) ) ) )
+
+-- ----- ----- EG ----- -----
+
+-- SPEC TAF( KK(dincry1.me, (dincry2.payer=yes)) )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

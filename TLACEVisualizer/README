@@ -1,0 +1,41 @@
+TLACE Visualizer is a tree-like annotated counter-examples visualizer and browser. It accepts counter-examples exported by NuSMV-ARCTL-TLACE in an XML format and displays them in a graph structure. It allows the user to manipulate and inspect the graph.
+
+------------
+INSTALLATION
+------------
+
+To compile the tool:
+
+ant jar
+
+To launch the tool:
+
+java -jar TLACEVisualizer.jar
+
+
+-------------
+DOCUMENTATION
+-------------
+
+	Manuals and references
+	
+A short manual is given in doc/manual/manual.pdf. It explains how to use the tool.
+
+The documentation of the source code can be generated:
+
+ant doc
+
+This creates the doc/api/ directory in which all the documentation is given.
+
+
+-------
+CONTENT
+-------
+
+This directory contains:
+	- an AUTHORS file giving the names and emails of people that developed this tool.
+	- the source code of the tool (src/ directory).
+	- the libraries used by the tool (lib/ directory).
+	- a manual (doc/manual/manual.pdf).
+	- the build.xml file. This file describes the actions that ANT can perform to build the tool and its documentation.
+	- this file.

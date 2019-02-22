@@ -1,0 +1,21 @@
+-- See p.6 Charles notes
+
+MODULE main
+  VAR state : {a,b,c,d};
+  IVAR action : {0,1};
+
+  INIT ( state=a )
+ 
+  TRANS ( next(state) = case
+              state=a : b;
+              (state=b & action=0): c;
+              (state=b & action=1): d;
+              1: state;
+           esac
+         )
+
+SPEC AG(state=b -> (EX(state=c) & EX(state=d)))
+
+-- More interesting: doing action=1 from b always leads to d
+SPEC AG(state=b -> !(EAX(action=1)(!state=d)))
+SPEC AG(state=b -> (EAX(action=1)(state=c)))

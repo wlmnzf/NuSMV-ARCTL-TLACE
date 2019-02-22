@@ -1,0 +1,32 @@
+include(../../nu-ctlk.m4)
+
+MODULE agent(ENV, global_val)
+
+	VAR
+		val:	0..5;
+		
+	AGENT(me, val)
+	
+	INIT val = 0
+	
+	TTRANS(
+		next(val) =
+			case
+				val < 5: val + 1;
+				1: val;
+			esac
+		)
+	
+	
+MODULE main
+
+	VAR_ENV
+	
+	VAR
+		a:		agent(ENV, val);
+		val:	0..5;
+		
+	TTRANS(next(val) = val)
+		
+
+SPEC TAF(KK(a.me, a.val = val))

@@ -1,0 +1,502 @@
+MODULE main
+  IVAR action :{ADD,
+                C1, C2, CMD_Drill, CMD_Lock, CMD_Unlock, CMD_Test, CMD_Turn, COnOff, 
+                D2, D1, DOnOff, DUpDown,
+                ERR, MC_EXIT,
+                INF_Drilled, INF_Locked, INF_Absent, INF_Present, INF_Unlocked, INF_Tested_False,
+                INF_Tested_True, INF_Turned,
+                T1, T2, TT1, TT2, TT3, TUpDown, TurnOn, 
+                REQ_add, REQ_Remove_False, REQ_Remove_True, REM};
+
+  VAR c : C(action);
+  VAR cc : CC(action);
+  VAR d : D(action);
+  VAR dc : DC(action);
+  VAR tt : TT(action);
+  VAR ttc : TTC(action);
+  VAR tp : TP(action);
+  VAR tpc : TPC(action);
+  VAR env : ENV(action);
+  VAR mc1 : MC1(action, newP0, p0, p3, mc5);
+  VAR mc2 : MC2(action, p1, mc5);
+  VAR mc3 : MC3(action, p2, newTr, tr, mc5);
+  VAR mc4 : MC4(action, p2, newP3, p3, tr, mc5);
+  VAR mc5 : MC5(action, newP0, newP3, newTr, p0, p1, p2, p3, tr);
+
+  VAR p0 : boolean;
+  VAR p1 : boolean;
+  VAR p2 : boolean;
+  VAR p3 : boolean;
+  VAR tr : boolean;
+
+  VAR newP0 : boolean;
+  VAR newP3 : boolean;
+  VAR newTr : boolean;
+  
+
+--SPEC
+--P1 : Après l’insertion d’une pièce et une rotation de la table, le contrôleur principal ne peut pas commander un perçage avant que le verrou n’ait été bloqué.
+--INDEX = 0
+SPEC !E[TRUE U (EAX(action = INF_Present) (EA(action != INF_Turned) [TRUE  U (EAX(action = INF_Turned) (EA(action != INF_Locked) [TRUE  U (EAX(action = CMD_Drill) ( TRUE ))]))]))]
+
+--P2: Après le perçage d’une pièce, le contrôleur principal ne peut pas commander une rotation avant que le verrou n’ait été relâché.
+--INDEX = 1
+SPEC !E[TRUE U (EAX(action = INF_Drilled) (EA(action != INF_Unlocked) [TRUE  U (EAX(action = CMD_Turn) ( TRUE ))]))]
+
+--P3: Après le perçage d’une pièce, le contrôleur principal ne peut pas commander une rotation avant que le verrou n’ait été relâché.
+--INDEX = 2
+SPEC !E[TRUE U (EAX(action = INF_Unlocked) (EA(action != INF_Turned) [TRUE  U (EAX(action = INF_Turned) (EAX(action != INF_Tested_True | action != INF_Tested_False) (EAX(action = CMD_Turn) ( TRUE ))))]))]
+
+--P4: Après le test d’une pièce et une rotation de la table, le contrôleur principal ne peut pas commander une rotation avant que la pièce n’ait éte récupérée.
+--INDEX = 3
+SPEC !E[TRUE U (EAX(action = INF_Tested_True | action = INF_Tested_False) (EA(action != INF_Turned) [TRUE  U (EAX(action = INF_Turned) (EA(action != INF_Absent) [TRUE  U (EAX(action = CMD_Turn) ( TRUE ))]))]))]
+
+--P5: Après la récupération d’une pièce et une rotation de la table, le contrôleur principal ne peut pas commander une rotation avant qu’une nouvelle pièce n’ait été insérée.
+--INDEX = 4
+SPEC !E[TRUE U (EAX(action = INF_Absent) (EA(action != INF_Turned) [TRUE  U (EAX(action = INF_Turned) (EA(action != INF_Present) [TRUE  U (EAX(action = CMD_Turn) ( TRUE ))]))]))]
+
+--P6: Chaque fois que le testeur détecte une pièce correctement percée, aucune erreur ne sera signalée lors du cycle de traitement suivant.
+--INDEX = 5
+SPEC !E[TRUE U (EAX(action = INF_Tested_True) (EA(action != INF_Turned) [TRUE  U (EAX(action = INF_Turned) (EA(action != INF_Turned) [TRUE  U (EAX(action = ERR) ( TRUE ))]))]))]
+
+--P7: Après que les positions de perçage et de test de la table ont été occupées, le contrôleur principal ne peut pas commander un test avant de commander un perçage. 
+--(Dans la version parallèle, cette propiété n'est pas rspectéé).
+--INDEX = 6
+SPEC E[TRUE U (EAX(action = INF_Present) (E[TRUE U (EAX(action = INF_Present) (E[TRUE U (EAX(action = INF_Present) (E[TRUE U (EAX(action = CMD_Test) (EAX(action != INF_Turned) (EAX(action = CMD_Drill) ( TRUE ))))]))]))]))]
+
+--P8: Initialement, le contrôleur principal commande inévitablement l’insertion de pièces dans toutes les positions de la table rotative.
+
+--INDEX = 7
+SPEC (AF tt.p0) & (AF tt.p1) & (AF tt.p2) & (AF tt.p3)
+
+--INDEX = 8
+SPEC AF (tt.p0 & AF (tt.p1 & (AF tt.p2 & (AF tt.p3))))
+
+--INDEX = 9
+SPEC AAG(action != CMD_Turn & action != REQ_add) (AAX(action = CMD_Turn & action != REQ_add) FALSE) & (AAF(action != CMD_Turn) EAX(action = REQ_add) TRUE) & (AAX(action = REQ_add) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != REQ_add) (AAX(action = CMD_Turn & action != REQ_add) FALSE) & (AAF(action != CMD_Turn) EAX(action = REQ_add) TRUE) & (AAX(action = REQ_add) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != REQ_add) (AAX(action = CMD_Turn & action != REQ_add) FALSE) & (AAF(action != CMD_Turn) EAX(action = REQ_add) TRUE) & (AAX(action = REQ_add) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != REQ_add) (AAX(action = CMD_Turn & action != REQ_add) FALSE) & (AAF(action != CMD_Turn) EAX(action = REQ_add) TRUE) & (AAX(action = REQ_add) TRUE)))))))))))))
+
+--P9: Chaque pièce insérée sera percée après la prochaine rotation de la table.
+--INDEX = 10
+SPEC AG(AAX(action = INF_Present) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != CMD_Lock) (AAX(action = CMD_Turn & action != CMD_Lock) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Lock) TRUE) & (AAX(action = CMD_Lock) (AAG(action != CMD_Turn & action != CMD_Drill) (AAX(action = CMD_Turn & action != CMD_Drill) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Drill) TRUE) & (AAX(action = CMD_Drill) (AAG(action != CMD_Turn & action != CMD_Unlock) (AAX(action = CMD_Turn & action != CMD_Unlock) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Unlock) TRUE) & (AAX(action = CMD_Unlock) TRUE)))))))))
+ 
+--P10: Chaque pièce percée sera testée après la prochaine rotation de la table.
+--INDEX = 11
+SPEC AG(AAX(action = INF_Unlocked) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != CMD_Test) (AAX(action = CMD_Turn & action != CMD_Test) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Test) TRUE) & (AAX(action = CMD_Test) TRUE)))))
+
+--P11: Chaque pièce testée sera récupérée après la prochaine rotation de la table.
+--INDEX = 12
+SPEC AG(AAX(action = INF_Tested_True) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != REQ_Remove_True) (AAX(action = CMD_Turn & action != REQ_Remove_True) FALSE) & (AAF(action != CMD_Turn) EAX(action = REQ_Remove_True) TRUE) & (AAX(action = REQ_Remove_True) TRUE)))))
+
+--INDEX = 13
+SPEC AG(AAX(action = INF_Tested_False) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != REQ_Remove_False) (AAX(action = CMD_Turn & action != REQ_Remove_False) FALSE) & (AAF(action != CMD_Turn) EAX(action = REQ_Remove_False) TRUE) & (AAX(action = REQ_Remove_False) TRUE)))))
+
+-- P12: Chaque récupération de pièce sera suivie par l’insertion d’une nouvelle pièce après la prochaine rotation de la table.
+--INDEX = 14
+SPEC AG(AAX(action = INF_Absent) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != REQ_add) (AAX(action = CMD_Turn & action != REQ_add) FALSE) & (AAF(action != CMD_Turn) EAX(action = REQ_add) TRUE) & (AAX(action = REQ_add) TRUE)))))
+
+-- P13: Chaque commande (respectivement requête) envoyée par le contrôleur principal aux dispositifs physiques (respectivement à l’environnement) sera inévitablement suivie de son acquittement avant la prochaine rotation de la table.
+
+--INDEX = 15
+SPEC AG AAX(action = REQ_add) (AAG(action != INF_Turned & action != INF_Present) (AAX(action = INF_Turned & action != INF_Present) FALSE) & (AAF(action != INF_Turned) EAX(action = INF_Present) TRUE) & (AAX(action = INF_Present) TRUE))
+--INDEX = 16
+SPEC AG AAX(action = CMD_Lock) (AAG(action != INF_Turned & action != INF_Locked) (AAX(action = INF_Turned & action != INF_Locked) FALSE) & (AAF(action != INF_Turned) EAX(action = INF_Locked) TRUE) & (AAX(action = INF_Locked) TRUE))
+--INDEX = 17
+SPEC AG AAX(action = CMD_Drill) (AAG(action != INF_Turned & action != INF_Drilled) (AAX(action = INF_Turned & action != INF_Drilled) FALSE) & (AAF(action != INF_Turned) EAX(action = INF_Drilled) TRUE) & (AAX(action = INF_Drilled) TRUE))
+--INDEX = 18
+SPEC AG AAX(action = CMD_Unlock) (AAG(action != INF_Turned & action != INF_Unlocked) (AAX(action = INF_Turned & action != INF_Unlocked) FALSE) & (AAF(action != INF_Turned) EAX(action = INF_Unlocked) TRUE) & (AAX(action = INF_Unlocked) TRUE))
+--INDEX = 19
+SPEC AG AAX(action = CMD_Test) (AAG(action != INF_Turned & action != INF_Tested_True & action != INF_Tested_False) (AAX(action = INF_Turned & action != INF_Tested_True & action != INF_Tested_False) FALSE) & (AAF(action != INF_Turned) EAX(action = INF_Tested_True & action = INF_Tested_False) TRUE))
+--INDEX = 20
+SPEC AG AAX(action = REQ_Remove_True | action = REQ_Remove_False) (AAG(action != INF_Turned & action != INF_Absent) (AAX(action = INF_Turned & action != INF_Absent) FALSE) & (AAF(action != INF_Turned) EAX(action = INF_Absent) TRUE) & (AAX(action = INF_Absent) TRUE)) 
+--INDEX = 21
+SPEC AG AAX(action = CMD_Turn) (AAG(action != INF_Turned & action != INF_Turned) (AAX(action = INF_Turned & action != INF_Turned) FALSE) & (AAF(action != INF_Turned) EAX(action = INF_Turned) TRUE) & (AAX(action = INF_Turned) TRUE))
+
+--P14: Chaque fois qu’une pièce incorrectement percée est détectée, une erreur sera inévitablement signalée lors du cycle de traitement suivant.
+--INDEX = 22
+SPEC AG(AAX(action = INF_Tested_False) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != ERR) (AAX(action = CMD_Turn & action != ERR) FALSE) & (AAF(action != CMD_Turn) EAX(action = ERR) TRUE) & (AAX(action = ERR) TRUE)))))
+
+ASSIGN
+  init (p0) := FALSE;
+  init (p1) := FALSE;
+  init (p2) := FALSE;
+  init (p3) := FALSE;
+  init (tr) := FALSE;
+--  init (newP0) := FALSE;
+--  init (newP3) := FALSE;
+--  init (newTr) := FALSE;
+
+-- Verrou (p. 14)
+MODULE C (action)
+ INVAR id != 2;
+ 
+ VAR id : 0..2;
+ VAR locked : boolean;
+
+ASSIGN
+  init(id) := 0;
+  next(id) := case
+                id = 0 & action = COnOff: 1;
+                id = 1 & action = C1 & locked: 0; 
+                id = 1 & action = C2 & !locked: 0;
+                !(action in {C1, C2, COnOff}): id;
+                1: 2;
+              esac;
+   
+  init(locked) := FALSE;
+  next(locked) := case
+                    locked & action = C1: !locked;
+                    !locked & action = C2: !locked;
+                    1: locked;
+                  esac;
+
+-- Contrôleur local du verrou (p. 13 et 14)
+MODULE CC(action)
+  INVAR id != 8;
+
+  VAR id : 0..8;
+
+ASSIGN
+  init(id) := 0;
+  next(id) := case
+                id = 0 & action = CMD_Lock: 1;
+                id = 1 & action = COnOff: 2;
+                id = 2 & action = C2: 3;
+                id = 3 & action = INF_Locked: 4;
+                id = 4 & action = CMD_Unlock: 5;
+                id = 5 & action = COnOff: 6;
+                id = 6 & action = C1: 7;
+                id = 7 & action = INF_Unlocked: 0;
+                !(action in {C1, C2, CMD_Lock, CMD_Unlock, COnOff, INF_Locked, INF_Unlocked}): id;
+                1 : 8;
+              esac;
+
+-- Perceuse (p. 15)
+MODULE D(action)
+  INVAR id != 2;
+
+  VAR id : 0..2;
+  VAR on : boolean;
+  VAR up : boolean;
+
+ASSIGN
+  init(id) := 0;
+  next(id) := case
+                id = 0 & action = DOnOff: 0;
+                id = 0 & action = DUpDown: 1;
+                id = 1 & action = D2 & up : 0;
+                id = 1 & action = D1 & !up: 0;
+                !(action in {D1, D2, DOnOff, DUpDown}): id;
+                1: 2;
+              esac;
+
+  init(on) := FALSE;
+  next(on) := case
+                id = 0 & action = DOnOff: !on;
+                1 : on;
+              esac; 
+                  
+  init(up) := TRUE;
+  next(up) := case
+                id = 1 & action = D2 & up: !up;
+                id = 1 & action = D1 & !up: !up;
+                1 : up;
+              esac;
+
+-- Contrôleur local de la perceuse (p. 13 et 15)
+MODULE DC(action)
+  INVAR id != 8;
+
+  VAR id : 0..8;
+
+ASSIGN
+  init(id) := 0;
+  next(id) := case
+                id = 0 & action = CMD_Drill: 1;
+                id = 1 & action = DOnOff: 2;
+                id = 2 & action = DUpDown: 3;
+                id = 3 & action = D2: 4;
+                id = 4 & action = DUpDown: 5;
+                id = 5 & action = D1: 6;
+                id = 6 & action = DOnOff: 7;
+                id = 7 & action = INF_Drilled: 0;
+                !(action in {CMD_Drill, D1, D2, DOnOff, DUpDown, INF_Drilled}): id;
+                1 : 8;
+              esac;
+
+-- Testeur (voir p. 16)
+MODULE TP(action)
+  INVAR id != 3;
+
+  VAR  id : 0..3;
+       up : boolean;
+
+ASSIGN
+  init(id) := 0;
+  next(id) := case
+                id = 0 & action = TUpDown & up : {0,1};
+                id = 1 & action = T2: 0;
+                id = 0 & action = TUpDown & !up : 2;
+                id = 2 & action = T1: 0;
+                !(action in {T1, T2, TUpDown}) : id;
+                1: 3;
+              esac;
+
+  init(up) := TRUE;
+  next(up) := case
+                id = 0 & next(id) = 0 & action = TUpDown: !up;
+                id = 1 & action = T2: !up;
+                id = 2 & action = T1: !up;
+                1 : up;
+              esac;
+
+-- Contrôleur local du testeur (p.13 et 16)
+MODULE TPC(action)
+  INVAR id != 8;
+
+  VAR  id : 0..8;
+
+ASSIGN
+  init(id) := 0;
+  next(id) := case
+                id = 0 & action = CMD_Test: 1;
+                id = 1 & action = TUpDown: 2;
+                id = 2 & action = TUpDown: 3;
+                id = 3 & action = T1: 4;
+                id = 4 & action = INF_Tested_False: 0;
+                id = 2 & action = T2: 5;
+                id = 5 & action = TUpDown: 6;
+                id = 6 & action = T1: 7;
+                id = 7 & action = INF_Tested_True: 0;
+                !(action in {CMD_Test, INF_Tested_True, INF_Tested_False, T1, T2, TUpDown}): id;
+                1: 8;
+              esac;
+
+--  Table rotative (p.14)
+MODULE TT(action)
+  INVAR id != 4;
+
+  VAR  id : 0..4;
+  VAR p0 : boolean;
+  VAR p1 : boolean;
+  VAR p2 : boolean;
+  VAR p3 : boolean;
+
+ASSIGN
+  init(id) := 0;
+  next(id) := case
+                id = 0 & action = TurnOn : 1;
+                id = 1 & action = TT2 : 0;
+                id = 0 & action = ADD & !p0 : 2;
+                id = 2 & action = TT1 : 0;
+                id = 0 & action = REM & p3 : 3;
+                id = 3 & action = TT3 : 0;
+                !(action in {ADD, REM, TurnOn, TT1, TT2, TT3}): id;
+                1: 4;
+              esac;
+
+    init(p0) := FALSE;
+    next(p0) := case
+                 id = 1 & action = TT2 : p3;
+                 id = 2 & action = TT1 : TRUE;
+                 1 : p0;
+                esac; 
+    
+    init(p1) := FALSE;
+    next(p1) := case
+                 id = 1 & action = TT2 : p0;
+                 1 : p1;
+                esac; 
+ 
+    init(p2) := FALSE;
+    next(p2) := case
+                  id = 1 & action = TT2 : p1;
+                  1 : p2;
+                esac; 
+ 
+    init(p3) := FALSE;
+    next(p3) := case
+                  id = 1 & action = TT2 : p2;
+                  id = 3 & action = TT3 : FALSE;
+                  1 : p3;
+                esac; 
+ 
+-- Contrôleur local du testeur (p.13 et 14)
+MODULE TTC(action)
+  INVAR id != 6;
+
+  VAR  id : 0..6;
+
+ASSIGN
+   init(id) := 1;
+   next(id) := case
+                 id = 1 & action = CMD_Turn: 2;
+                 id = 1 & action = TT1: 0;
+                 id = 1 & action = TT3: 5;
+                 id = 2 & action = TurnOn: 3;
+                 id = 3 & action = TT2: 4;
+                 id = 4 & action = INF_Turned: 1;
+                 id = 0 & action = INF_Present: 1;
+                 id = 5 & action = INF_Absent: 1;
+                 !(action in {CMD_Turn, INF_Absent, INF_Present, INF_Turned, TT1, TT2, TT3, TurnOn}): id;
+		 1 : 6;
+               esac; 
+
+-- Environnement (p. 19)
+MODULE ENV(action)
+  INVAR id != 4;
+
+  VAR id : 0..4;
+
+ASSIGN
+  init(id) := 0;
+  next(id) := case
+                id = 0 & action = REQ_add: 1;
+                id = 0 & action = REQ_Remove_False: 2;
+                id = 0 & action = REQ_Remove_True: 3;
+                id = 1 & action = ADD: 0;
+                id = 2 & action = ERR: 3;
+                id = 3 & action = REM: 0;
+                !(action in {ADD, ERR, REM, REQ_add, REQ_Remove_False, REQ_Remove_True}) : id;
+                1: 4;
+              esac;
+
+-- Contrôleur principlal (p. 16)
+MODULE MC1(action, newP0, p0, p3, mc5)
+ INVAR id != 4;
+
+ VAR id : 0..4;
+
+ASSIGN
+  init(id) := 0;
+  next(id) := case
+                id = 0 & action = REQ_add & !p0 : 1;
+                id = 1 & action = INF_Present: 2;
+                id = 2 & action = MC_EXIT: 3;
+                id = 0 & action = MC_EXIT & p0: 3;
+                -- TODO 
+                mc5.id = 2 & action = INF_Turned: 0;
+                !(action in {INF_Present, INF_Turned, MC_EXIT, REQ_add}) : id;
+                1: 4;
+               esac;
+
+  next(newP0) := case
+                  id = 2 & action = MC_EXIT: TRUE;
+                  id = 0 & action = MC_EXIT & p0: p0;
+                  mc5.id = 2 & action = INF_Turned : FALSE;
+                  1: newP0;
+                 esac;
+
+MODULE MC2(action, p1, mc5)
+  INVAR id != 9;
+
+  VAR id : 1..9;
+
+ASSIGN
+  init(id) := 1;
+  next(id) := case
+                id = 1 & action = CMD_Lock & p1: 2;
+                id = 2 & action = INF_Locked: 3;
+                id = 3 & action = CMD_Drill: 4;
+                id = 4 & action = INF_Drilled: 5;
+                id = 5 & action = CMD_Unlock: 6;
+                id = 6 & action = INF_Unlocked: 7;
+                id = 7 & action = MC_EXIT: 8;
+                id = 1 & action = MC_EXIT & !p1: 8;
+                --TODO 
+                mc5.id = 2 & action = INF_Turned: 1;
+                !(action in {CMD_Drill, CMD_Lock, CMD_Unlock, 
+                             INF_Drilled, INF_Locked, INF_Turned, INF_Unlocked, MC_EXIT}): id;
+                1: 9;
+               esac;
+
+MODULE MC3(action, p2, newTr, tr, mc5)
+  INVAR id != 6;
+
+  VAR id : 1..6;
+
+ASSIGN
+  init(id) := 1;
+  next(id) := case
+                id = 1 & p2 & action = CMD_Test: 2;
+                id = 2 & action = INF_Tested_True: 3;
+                id = 2 & action = INF_Tested_False: 4;
+                id = 3 & action = MC_EXIT: 5;
+                id = 4 & action = MC_EXIT: 5;
+                id = 1 & !p2 & action = MC_EXIT: 5;
+                mc5.id = 2 & action = INF_Turned: 1; 
+                !(action in {CMD_Test, INF_Tested_False, INF_Tested_True, INF_Turned, MC_EXIT}): id;
+                1: 6;
+               esac;
+
+  next(newTr) := case
+                id = 3 & action = MC_EXIT: TRUE;
+                id = 4 & action = MC_EXIT: FALSE;
+                id = 1 & !p2 & action = MC_EXIT: tr;
+                1: newTr;
+              esac;
+
+MODULE MC4(action, p2, newP3, p3, tr, mc5)
+  INVAR id != 6;
+
+  VAR id : 1..6;
+
+ASSIGN
+  init(id) := 1;
+  next(id) := case
+                id = 1 & p3 & action = REQ_Remove_True & tr: 2;
+                id = 1 & p3 & action = REQ_Remove_False & !tr: 3;
+                id = 2 & action = INF_Absent: 4;
+                id = 3 & action = INF_Absent: 4;
+                id = 4 & action = MC_EXIT: 5;
+                id = 1 & !p3 & action = MC_EXIT: 5;
+                -- TODO
+                mc5.id = 2 & action = INF_Turned: 1;
+                !(action in {INF_Absent, INF_Turned, MC_EXIT, REQ_Remove_False, REQ_Remove_True}): id;
+                1: 6;
+              esac;
+
+  next(newP3) := case
+                   id = 1 & action = MC_EXIT: FALSE;
+                   id = 1 & !p3 & action = MC_EXIT: p3;
+                   1: newP3;
+                 esac;
+
+MODULE MC5(action, newP0, newP3, newTr, p0, p1, p2, p3, tr)
+  INVAR id != 3;
+
+  VAR id : 0..3;
+
+ASSIGN
+  init(id) := 0;
+  next(id) := case
+                id = 0 & action = MC_EXIT : 1;
+                id = 1 & action = CMD_Turn : 2;
+                id = 2 & action = INF_Turned: 0;
+                !(action in {CMD_Turn, INF_Turned, MC_EXIT}): id;
+                1: 3; 
+              esac;
+
+  next(p0) := case
+                id = 2 & action = INF_Turned : newP3;
+                1: p0;
+              esac;
+
+  next(p1) := case
+                id = 2 & action = INF_Turned : newP0;
+                1: p1;
+             esac;
+
+  next(p2) := case
+                id = 2 & action = INF_Turned : p1;
+                1: p2;
+              esac;
+
+  next(p3) := case
+                id = 2 & action = INF_Turned : p2;
+                1: p3;
+              esac;
+
+  next(tr) := case
+                id = 2 & action = INF_Turned : newTr;
+                1: tr;
+              esac;

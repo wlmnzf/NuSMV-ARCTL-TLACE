@@ -1,0 +1,50 @@
+MODULE user(semaphore)
+VAR
+  state : {idle,entering,critical,exiting};
+ASSIGN
+  init(state) := idle;
+  next(state) := 
+    case 
+      state = idle : {idle,entering};
+      state = entering & !semaphore : critical;
+      state = critical : {critical,exiting};
+      state = exiting : idle;
+      1 : state;
+    esac;
+  next(semaphore) := 
+    case
+      state = entering : 1;
+      state = exiting : 0;
+      1 : semaphore;
+    esac;
+
+MODULE main
+VAR
+  semaphore : boolean;
+  proc1 : process user(semaphore);
+  proc2 : process user(semaphore);
+ASSIGN
+  init(semaphore) := 0;
+	
+FAIRNESS
+running
+
+
+--SPEC AG(proc1.state=entering -> AF proc1.state=critical)
+
+--SPEC AG(proc1.state=entering & proc2.state=idle -> A[proc2.state!=critical U proc1.state=critical])
+
+-- A[p U AX q]
+-- AF AX p
+
+-------------------------------------------------------------------------------
+
+--SPEC A[EX proc1.state=idle W AX proc1.state=critical]
+
+--SPEC AF proc1.state=critical | AG proc1.state=idle
+
+--SPEC A[proc1.state=idle U AX proc1.state=critical]
+
+SPEC AF AX proc1.state=critical
+
+--SPEC AG proc1.state!=critical | AF proc1.state=critical

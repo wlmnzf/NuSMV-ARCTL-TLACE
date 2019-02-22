@@ -1,0 +1,119 @@
+-- Model of the dining cryptographers as exposed in
+--
+-- "The Dining Cryptographers Problem: Unconditional Sender
+-- and Recipient Untraceability" D. Chaum
+--
+-- by Simon Busard <simon.busard@uclouvain.be>, 19/01/2011
+
+include(../nu-ctlk.m4)
+
+MODULE cryptographer(ENV, leftcoin, leftsay, rightsay)
+
+	VAR
+		payer : boolean;
+		coin : {head, tail, none};
+		coins : {equal, different, none};
+		oddcount : {even, odd, none};
+	
+	IVAR
+		say : {nothing, equal, different};
+		
+	AGENT(me, payer, coin, coins, oddcount)
+		
+	INIT
+		coin = none & coins = none & oddcount = none
+		
+	-- Protocol
+	TTRANS(
+		say =	case
+					coins != none & oddcount = none & payer :
+						case
+							coins = different : equal ;
+							1 : different;
+						esac;
+					coins != none & oddcount = none & !payer :
+						case
+							coins = different : different;
+							1 : equal;
+						esac;
+					1 : nothing;
+				esac)
+		
+	-- Evolution function
+	TTRANS(
+		next(payer) = payer)
+	TTRANS(
+		next(coin) in	case
+							coin = none : {head, tail};
+							1 : coin;
+						esac)
+	TTRANS(
+		next(coins) =	case
+							coins = none & coin != none :
+								case
+									coin = leftcoin : equal;
+									1 : different;
+								esac;
+							1 : coins;
+						esac)
+	TTRANS(
+		next(oddcount) =	case
+								say != nothing :
+									case
+										((say = different) +
+										(leftsay = different) +
+										(rightsay = different)) mod 2 = 1 : odd;
+										1 : even;
+									esac;
+								1 : oddcount;
+							esac)
+							
+MODULE main
+
+	VAR_ENV
+	
+	VAR
+		a : cryptographer(ENV, c.coin, c.say, b.say);
+		b : cryptographer(ENV, a.coin, a.say, c.say);
+		c : cryptographer(ENV, b.coin, b.say, a.say);
+		
+	INIT
+		(a.payer + b.payer + c.payer) <= 1
+	
+	DEFINE nodd := (a.oddcount = odd);
+	DEFINE neven := (a.oddcount = even);
+		
+		
+-- If c sees two equal coins, a knows that c sees two equal coins : FALSE
+-- SPEC TAG(c.coins=equal -> KK(a.me, c.coins=equal))
+-- If c sees two equal coins, c knows it : TRUE
+-- SPEC TAG(c.coins=equal -> KK(c.me, c.coins=equal))
+
+-- If the number of different claims is odd and a doesn't pay,
+-- then a knows that b or c is the payer : TRUE
+-- SPEC TAG((nodd & !a.payer) -> KK(a.me, (b.payer | c.payer)))
+-- If the number of different claims is even,
+-- then a knows that neither b nor c is the payer : TRUE
+-- SPEC TAG((neven) -> KK(a.me, (!b.payer & !c.payer)))
+
+-- If the number of different claims is odd,
+-- then b knows that NSA pays : TRUE
+-- SPEC nodd -> TAF(KK(b.me, !a.payer & !b.payer & !c.payer))
+
+-- If a is the payer, then a knows that neither b nor c pays : TRUE
+-- SPEC TAG(a.payer -> (KK(a.me, !b.payer) & KK(a.me, !c.payer)))
+
+-- If the number of different claims is even and a is not the payer,
+-- then a knows that either b or ce is the payer : FALSE
+-- SPEC TAG((neven & !a.payer) -> KK(a.me,((b.payer | c.payer))))
+
+-- If a is not the payer, then he knows that b is : FALSE
+-- SPEC TAG((!a.payer) -> KK(a.me, (b.payer)))
+
+-- If the number of different claims is odd and a is not the payer,
+-- then a knows that b is the payer or a knows that c is the payer : FALSE
+-- SPEC TAG((nodd & !a.payer) -> (KK(a.me, b.payer) | KK(a.me, c.payer)))
+
+-- The first cryptographer always finally knows that one of them is the payer
+-- FALSE
+SPEC TAF(KK(a.me, (a.payer | b.payer | c.payer)))

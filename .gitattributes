@@ -1,0 +1,5 @@
+/Examples/ARCTL export-ignore
+/NuSMV/TLACE/manual.tex export-ignore
+/Tests export-ignore
+/TODEBUG export-ignore
+/TODO.txt export-ignore

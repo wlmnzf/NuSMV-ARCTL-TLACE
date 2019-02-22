@@ -1,0 +1,23 @@
+MODULE main
+
+	VAR i : 0..3;
+	IVAR
+		a : {act,idle};
+		b : boolean;	
+	
+	INIT
+		i = 0
+	
+	TRANS
+		next(i) = 	case
+						a = act : i + 1 mod 4;
+						1 : i;
+					esac;
+	TRANS
+		a in 		case
+						i < 2 : act;
+						1 : {act,idle};
+					esac;
+					
+SPEC AAX(a = act & !b)(i = 1);
+SPEC EAX(b)(TRUE);

@@ -1,0 +1,167 @@
+MODULE main
+  INVAR id != 69
+
+  IVAR action : {ADD,
+                 CMD_Drill, CMD_Lock, CMD_Test, CMD_Turn, CMD_Unlock,
+                 EPSILON, ERR,
+                 INF_Absent, INF_Drilled, INF_Locked, INF_Present, INF_Tested_False, INF_Tested_True, INF_Turned, INF_Unlocked,
+                 REQ_add, REQ_Remove_False, REQ_Remove_True, REM};
+
+  VAR id : 0..69;
+  VAR count : 0..6;
+
+--SPEC
+--P1 : Après l’insertion d’une pièce et une rotation de la table, le contrôleur principal ne peut pas commander un perçage avant que le verrou n’ait été bloqué.
+--INDEX = 0
+SPEC !E[TRUE U (EAX(action = INF_Present) (EA(action != INF_Turned) [TRUE  U (EAX(action = INF_Turned) (EA(action != INF_Locked) [TRUE  U (EAX(action = CMD_Drill) ( TRUE ))]))]))]
+
+--P2: Après le perçage d’une pièce, le contrôleur principal ne peut pas commander une rotation avant que le verrou n’ait été relâché.
+--INDEX = 1
+SPEC !E[TRUE U (EAX(action = INF_Drilled) (EA(action != INF_Unlocked) [TRUE  U (EAX(action = CMD_Turn) ( TRUE ))]))]
+
+--P3: Après le perçage d’une pièce, le contrôleur principal ne peut pas commander une rotation avant que le verrou n’ait été relâché.
+--INDEX = 2
+SPEC !E[TRUE U (EAX(action = INF_Unlocked) (EA(action != INF_Turned) [TRUE  U (EAX(action = INF_Turned) (EAX(action != INF_Tested_True | action != INF_Tested_False) (EAX(action = CMD_Turn) ( TRUE ))))]))]
+
+--P4: Après le Test d’une pièce et une rotation de la table, le contrôleur principal ne peut pas commander une rotation avant que la pièce n’ait éte récupérée.
+--INDEX = 3
+SPEC !E[TRUE U (EAX(action = INF_Tested_True | action = INF_Tested_False) (EA(action != INF_Turned) [TRUE  U (EAX(action = INF_Turned) (EA(action != INF_Absent) [TRUE  U (EAX(action = CMD_Turn) ( TRUE ))]))]))]
+
+--P5: Après la récupération d’une pièce et une rotation de la table, le contrôleur principal ne peut pas commander une rotation avant qu’une nouvelle pièce n’ait été insérée.
+--INDEX = 4
+SPEC !E[TRUE U (EAX(action = INF_Absent) (EA(action != INF_Turned) [TRUE  U (EAX(action = INF_Turned) (EA(action != INF_Present) [TRUE  U (EAX(action = CMD_Turn) ( TRUE ))]))]))]
+
+--P6: Chaque fois que le Testeur détecte une pièce correctement percée, aucune erreur ne sera signalée lors du cycle de traitement suivant.
+--INDEX = 5
+SPEC !E[TRUE U (EAX(action = INF_Tested_True) (EA(action != INF_Turned) [TRUE  U (EAX(action = INF_Turned) (EA(action != INF_Turned) [TRUE  U (EAX(action = ERR) ( TRUE ))]))]))]
+
+--P7: Après que les positions de perçage et de Test de la table ont été occupées, le contrôleur principal ne peut pas commander un Test avant de commander un perçage. 
+--(Dans la version parallèle, cette propiété n'est pas rspectéé).
+--INDEX = 6
+SPEC !E[TRUE U (EAX(action = INF_Present) (E[TRUE U (EAX(action = INF_Present) (E[TRUE U (EAX(action = INF_Present) (E[TRUE U (EAX(action = CMD_Test) (EAX(action != INF_Turned) (EAX(action = CMD_Drill) ( TRUE ))))]))]))]))]
+
+--P8: Initialement, le contrôleur principal commande inévitablement l’insertion de pièces dans toutes les positions de la table rotative.
+--INDEX = 7
+SPEC AAG(action != CMD_Turn & action != REQ_add) (AAX(action = CMD_Turn & action != REQ_add) FALSE) & (AAF(action != CMD_Turn) EAX(action = REQ_add) TRUE) & (AAX(action = REQ_add) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != REQ_add) (AAX(action = CMD_Turn & action != REQ_add) FALSE) & (AAF(action != CMD_Turn) EAX(action = REQ_add) TRUE) & (AAX(action = REQ_add) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != REQ_add) (AAX(action = CMD_Turn & action != REQ_add) FALSE) & (AAF(action != CMD_Turn) EAX(action = REQ_add) TRUE) & (AAX(action = REQ_add) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != REQ_add) (AAX(action = CMD_Turn & action != REQ_add) FALSE) & (AAF(action != CMD_Turn) EAX(action = REQ_add) TRUE) & (AAX(action = REQ_add) TRUE)))))))))))))
+
+--P9: Chaque pièce insérée sera percée après la prochaine rotation de la table.
+--INDEX = 8
+SPEC AG(AAX(action = INF_Present) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != CMD_Lock) (AAX(action = CMD_Turn & action != CMD_Lock) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Lock) TRUE) & (AAX(action = CMD_Lock) (AAG(action != CMD_Turn & action != CMD_Drill) (AAX(action = CMD_Turn & action != CMD_Drill) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Drill) TRUE) & (AAX(action = CMD_Drill) (AAG(action != CMD_Turn & action != CMD_Unlock) (AAX(action = CMD_Turn & action != CMD_Unlock) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Unlock) TRUE) & (AAX(action = CMD_Unlock) TRUE)))))))))
+ 
+--P10: Chaque pièce percée sera Testée après la prochaine rotation de la table.
+--INDEX = 9
+SPEC AG(AAX(action = INF_Unlocked) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != CMD_Test) (AAX(action = CMD_Turn & action != CMD_Test) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Test) TRUE) & (AAX(action = CMD_Test) TRUE)))))
+
+--P11: Chaque pièce Testée sera récupérée après la prochaine rotation de la table.
+--INDEX = 10
+SPEC AG(AAX(action = INF_Tested_True) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != REQ_Remove_True) (AAX(action = CMD_Turn & action != REQ_Remove_True) FALSE) & (AAF(action != CMD_Turn) EAX(action = REQ_Remove_True) TRUE) & (AAX(action = REQ_Remove_True) TRUE)))))
+
+--INDEX = 11
+SPEC AG(AAX(action = INF_Tested_False) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != REQ_Remove_False) (AAX(action = CMD_Turn & action != REQ_Remove_False) FALSE) & (AAF(action != CMD_Turn) EAX(action = REQ_Remove_False) TRUE) & (AAX(action = REQ_Remove_False) TRUE)))))
+
+-- P12: Chaque récupération de pièce sera suivie par l’insertion d’une nouvelle pièce après la prochaine rotation de la table.
+--INDEX = 12
+SPEC AG(AAX(action = INF_Absent) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != REQ_add) (AAX(action = CMD_Turn & action != REQ_add) FALSE) & (AAF(action != CMD_Turn) EAX(action = REQ_add) TRUE) & (AAX(action = REQ_add) TRUE)))))
+
+-- P13: Chaque commande (respectivement requête) envoyée par le contrôleur principal aux dispositifs physiques (respectivement à l’environnement) sera inévitablement suivie de son acquittement avant la prochaine rotation de la table.
+
+--INDEX = 13
+SPEC AG AAX(action = REQ_add) (AAG(action != INF_Turned & action != INF_Present) (AAX(action = INF_Turned & action != INF_Present) FALSE) & (AAF(action != INF_Turned) EAX(action = INF_Present) TRUE) & (AAX(action = INF_Present) TRUE))
+--INDEX = 14
+SPEC AG AAX(action = CMD_Lock) (AAG(action != INF_Turned & action != INF_Locked) (AAX(action = INF_Turned & action != INF_Locked) FALSE) & (AAF(action != INF_Turned) EAX(action = INF_Locked) TRUE) & (AAX(action = INF_Locked) TRUE))
+--INDEX = 15
+SPEC AG AAX(action = CMD_Drill) (AAG(action != INF_Turned & action != INF_Drilled) (AAX(action = INF_Turned) FALSE) & (AAF(action != INF_Turned) EAX(action = INF_Drilled) TRUE))
+--INDEX = 16
+SPEC AG AAX(action = CMD_Unlock) (AAG(action != INF_Turned & action != INF_Unlocked) (AAX(action = INF_Turned & action != INF_Unlocked) FALSE) & (AAF(action != INF_Turned) EAX(action = INF_Unlocked) TRUE) & (AAX(action = INF_Unlocked) TRUE))
+--INDEX = 17
+SPEC AG AAX(action = CMD_Test) (AAG(action != INF_Turned & action != INF_Tested_True & action != INF_Tested_False) (AAX(action = INF_Turned & action != INF_Tested_True & action != INF_Tested_False) FALSE) & (AAF(action != INF_Turned) EAX(action = INF_Tested_True & action = INF_Tested_False) TRUE))
+--INDEX = 18
+SPEC AG AAX(action = REQ_Remove_True | action = REQ_Remove_False) (AAG(action != INF_Turned & action != INF_Absent) (AAX(action = INF_Turned & action != INF_Absent) FALSE) & (AAF(action != INF_Turned) EAX(action = INF_Absent) TRUE) & (AAX(action = INF_Absent) TRUE)) 
+--INDEX = 19
+SPEC AG AAX(action = CMD_Turn) (AAG(action != INF_Turned & action != INF_Turned) (AAX(action = INF_Turned & action != INF_Turned) FALSE) & (AAF(action != INF_Turned) EAX(action = INF_Turned) TRUE) & (AAX(action = INF_Turned) TRUE))
+
+--P14: Chaque fois qu’une pièce incorrectement percée est détectée, une erreur sera inévitablement signalée lors du cycle de traitement suivant.
+--INDEX = 20
+SPEC AG(AAX(action = INF_Tested_False) (AAG(action != CMD_Turn & action != CMD_Turn) (AAX(action = CMD_Turn & action != CMD_Turn) FALSE) & (AAF(action != CMD_Turn) EAX(action = CMD_Turn) TRUE) & (AAX(action = CMD_Turn) (AAG(action != CMD_Turn & action != ERR) (AAX(action = CMD_Turn & action != ERR) FALSE) & (AAF(action != CMD_Turn) EAX(action = ERR) TRUE) & (AAX(action = ERR) TRUE)))))
+
+ASSIGN
+   init(id) := 0;
+   next(id) := case
+                id = 0 & action = REQ_add : 31;
+                id = 1 & action = EPSILON : {33, 36};
+                id = 2 & action = INF_Drilled : 53;
+                id = 3 & action = CMD_Drill : 64;
+                id = 4 & action = INF_Locked : 51;
+                id = 5 & action = CMD_Lock : 62;
+                id = 6 & action = INF_Present : 49;
+                id = 7 & action = ADD : 60;
+                id = 8 & action = REQ_add : 47;
+                id = 9 & action = CMD_Turn : 45;
+                id = 10 & action = INF_Absent: 58;
+                id = 11 & action = ERR: 66;
+                id = 12 & action = REQ_Remove_False : 11;
+                id = 13 & action = REQ_Remove_True: 66;
+                id = 14 & action = CMD_Unlock : 65;
+                id = 15 & action = INF_Unlocked: 44;
+                id = 16 & action = REM: 18;
+                id = 17 & action = CMD_Unlock : 15;
+                id = 18 & action = INF_Absent : 9;
+                id = 19 & action = INF_Tested_True : 20;
+                id = 20 & action = REQ_Remove_False : 21;
+                id = 21 & action = ERR : 16;
+                id = 22 & action = ADD : 48;
+                id = 23 & action = INF_Tested_True : 24;
+                id = 24 & action = REQ_Remove_True: 16;
+                id = 25 & action = INF_Present : 57;
+                id = 26 & action = CMD_Test: 27;
+                id = 27 & action = EPSILON : {19, 38};
+                id = 28 & action = ADD: 32;
+                id = 29 & action = INF_Turned : 30;
+                id = 30 & action = REQ_add : 28;
+                id = 31 & action = ADD : 25;
+                id = 32 & action = INF_Present : 61;
+                id = 33 & action = INF_Tested_False : 58;
+                id = 34 & action = INF_Unlocked: 35;
+                id = 35 & action = CMD_Test: 1;
+                id = 36 & action = INF_Tested_True: 9;
+                id = 37 & action = CMD_Lock : 50;
+                id = 38 & action = INF_Tested_False: 12;
+                id = 39 & action = INF_Locked : 63;
+                id = 40 & action = INF_Unlocked : 54;
+                id = 41 & action = CMD_Unlock: 34;
+                id = 42 & action = CMD_Drill: 52;
+                id = 43 & action = INF_Turned : 46;
+                id = 44 & action = CMD_Turn : 43;
+                id = 45 & action = INF_Turned : 8;
+                id = 46 & action = REQ_add : 22;
+                id = 47 & action = ADD: 6;
+                id = 48 & action = INF_Present: 37;
+                id = 49 & action = CMD_Lock: 4;
+                id = 50 & action = INF_Locked : 42;
+                id = 51 & action = CMD_Drill : 2;
+                id = 52 & action = INF_Drilled : 41;
+                id = 53 & action = CMD_Unlock : 40;
+                id = 54 & action = CMD_Test : 67;
+                id = 55 & action = INF_Drilled : 17;
+                id = 56 & action = INF_Turned : 59;
+                id = 57 & action = CMD_Turn : 29;
+                id = 58 & action = CMD_Turn : 56;
+                id = 59 & action = REQ_add : 7;     
+                id = 60 & action = INF_Present : 5;     
+                id = 61 & action = CMD_Lock : 39;     
+                id = 62 & action = INF_Locked : 3;     
+                id = 63 & action = CMD_Drill : 55;     
+                id = 64 & action = INF_Drilled : 14;     
+                id = 65 & action = INF_Unlocked : 26;     
+                id = 66 & action = REM : 10;     
+                id = 67 & action = EPSILON : {23, 68};     
+                id = 68 & action = INF_Tested_False  : 13;
+                1: 69;
+             esac;
+
+  init(count) := 0;
+  next(count) := case 
+                  action = ADD & count < 6 : count + 1;
+                  action = REM & count > 0 : count - 1;
+                  1 : count;
+                 esac; 

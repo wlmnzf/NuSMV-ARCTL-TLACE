@@ -1,0 +1,120 @@
+/*************************************************************************/
+/*  Modifications to NuSMV-2.2.1 source code by Franco Raimondi          */
+/*************************************************************************/
+
+
+02/08/2004: Changed sm/smMain.c (BannerPrint); changed parser/input.l 
+(token TOK_EAX); changed parser/symbol.h (added EAX and increased TOK*MAX);
+changed parser/grammar.y (TOK_EAX);
+changed compile/compileFlatten.c (line 1592), to support EAX
+changed compile/compileCone.c (line 575) to support EAX
+disabled check in prop/PropDb.c (line 242): THIS *MUST* be reintroduced, by evaluating the expression.
+in mc/mcMc.c, added function eax (lines 284-310)
+in mc/mc.h, added line 73
+in mc/mcEval.c, added line 228 (case EAX:...) 
+in node/nodeWffPrint.c: using arity to print EAX nicely (arity=10);
+                        added lines 278-280;
+                        added case: at lines 372-380;
+Added a few tests in nusmv/tests
+
+---------------------------------------------------------------------------
+
+03/08/2004: In compile/compileFlatten.c, commented lines 945-955 to avoid 
+single-value variables to be encoded as constants (NuSMV bug). NOTICE: 
+I think that TWODOTS (above line 945) should be changed, too.
+Changed parser/input.l (token TOK_EEA)
+Changed parser/symbol.h (EEA)
+Changed parser/grammar.y (TOK_EEA)
+Changed compile/compileFlatten.c (line 1604-1613) to support EEA
+Changed compile/compileCone.c (line 577) to support EEA
+in mc/mcEval.c: added function binary_act_bdd_op (line 603);
+                addedd line 236 (case EEA)
+                added declaration of BDDPFFBBB (line 56)
+in mc/mcMc.c: addedd function eau (lines 312-342);
+in mc/mc.h: added line 75
+in node/nodeWffPrint.c: using arity 11 to print EAU nicely;
+                        added line 282-284
+                        added case: at line 385
+
+----------------------------------------------------------------------------
+
+04/08/2004: Fixed eau(...) in mcMc.c and mcEval.c
+
+----------------------------------------------------------------------------
+
+05/08/2004: Changed parser/input.l (token TOK_AAX)
+Changed parser/grammar.y (TOK_AAX)
+Changed parser/symbol.h (AAX)
+Changed compile/compileFlatten.c (AAX, lines 1612-1622)
+in mc/mcEval.c, line 241: introduced AAX, using eax.
+in node/nodeWffPrint.c: introduce AAX case (line 285)
+
+Changed EEA in EAU in: parser/grammar.y, symbol.h, compileFlatten.c, 
+   compileCone.c, nodeWffPrint.c
+
+Changed parser/input.l (token TOK_AAA)
+Changed parser/grammar.y (TOK_AAA and AAU)
+Changed parser/symbols.h (AAU)
+Changed compile/compileFlatten.c (lines 1624-1633)
+Changed compile/compileCone.c (line 581)
+In mc/mcMc.c, introduced aau(...) (lines 344-373)
+In mc/mc.h: added line 77
+In mc/mcEval.c: added line 240
+Changed node/nodeWffPrint.c (supporto for AAU)
+
+Changed parser/input.l (token TOK_EAF)
+Changed parser/grammar.y (TOK_EAF and EAF)
+Changed parser/symbols.h (EAF)
+Changed compile/compileFlatten.c (EAF)
+Changed compile/compileCone.c (EAF)
+In mc/mcMc.c, introduced eaf(...) (lines 376-404)
+In mc/mc.h, added line 80
+Changed mc/mcEval.c (line 244)
+Changed node/nodeWffPrint.c
+
+Changed parser/input.l (TOK_AAF)
+Changed parser/grammar.y (TOK_AAF and AAF)
+Changed parser/symbols.h (AAF)
+Changed compile/compileFlatten.c (AAF)
+Changed compile/compileCone.c (AAF)
+Changed mc/mcEval.c (AAF defined in terms of EAG)
+Changed node/nodeWffPrint.c (AAF)
+
+Changed parser/input.l (TOK_EAG)
+Changed parser/grammar.y (TOK_EAG and EAG)
+Changed parser/symbols.h (EAG)
+Changed compile/compileFlatten.c (EAG)
+Changed compile/compileCone.c (EAG)
+in mc/mcMc.c, introduced eag(...)
+in mc/mc.h, added line 79
+Changed mc/mcEval.c (line 247)
+Changed node/nodeWffPrint.c (EAG)
+
+Changed parser/input.l (TOK_AAG)
+Changed parser/grammar.y (TOK_AAG and AAG)
+Changed parser/symbols.h (AAG)
+Changed compile/compileFlatten.c (AAG)
+Changed compile/compileCone.c (AAG)
+Changed mc/mcEval.c (AAG defined in terms of EAF)
+Changed node/nodeWffPrint.c (AAG)
+
+---------------------------------------------------------------------------
+
+06/08/2004: Changed parser/input.l (TOK_REACHABLE)
+Changed parser/grammar.y (TOK_REACHABLE and REACHABLE)
+Changed parser/symbols.h
+Changed compile/compileFlatten.c (line 1585)
+Changed compile/compileCone.c (line 570)
+Changed mc/mcEval.c (line 251)
+In mc/mcMc.c, introduced reachable(act), lines 451 - 538
+In mc/mc.h, added line 81
+Changed node/nodeWffPrint.c (REACHABLE)
+NOTICE NOTICE!!! No checks on simple_expr, it may cause problems.
+
+Changed parser/input.l (TOK_START)
+Changed parser/grammar.y (TOK_START and START)
+Changed parser/symbols.h (START)
+Changed compile/compileFlatten.c (line 1466)
+Changed compile/compileCone.c (line 437)
+In mc/mcEval.c, introduce case: START (line 254)
+In node/nodeWffPrint.c, introduced lines 200-201

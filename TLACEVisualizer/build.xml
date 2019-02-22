@@ -1,0 +1,73 @@
+<project name="TLACEVisualizer" default="compile" basedir=".">
+    <description>Builder for TLACE Visualizer</description>
+    
+    <!-- set global properties for this build -->
+    <property name="src" location="src"/>
+    <property name="build" location="bin" />
+    <property name="dist" location="dist" />
+    <property name="lib" location="lib"/>
+    <property name="doc" location="doc"/>
+	
+	<path id="project.classpath">
+		<pathelement location="${build}" />
+		<fileset dir="${lib}">
+			<include name="jung/*.jar"/>
+		</fileset>
+	</path>
+
+    <!-- initialization target -->
+    <target name="init">
+        <!-- Create the time stamp -->
+        <tstamp />
+    </target>
+    
+    <!-- compilation target -->
+    <target name="compile" depends="init" description="Compiles the sources">
+        <!-- Create the build directory structure used by compile -->
+        <mkdir dir="${build}" />
+        <!-- Compile the java code from ${src} into ${build} -->
+        <javac debug="true" srcdir="${src}" destdir="${build}" encoding="UTF-8">
+			<classpath refid="project.classpath" />
+        </javac>
+    </target>
+
+	<manifestclasspath property="jar.classpath" jarfile="TLACEVisualizer.jar">
+		<classpath refid="project.classpath" />
+	</manifestclasspath>
+	
+    <target name="jar" depends="compile" description="Compiles and creates the jar">
+        <jar jarfile="TLACEVisualizer.jar" basedir="${build}" >
+    		<manifest>
+				<attribute name="Class-Path" value="${jar.classpath}"/>
+	        	<attribute name="Main-Class" value="application.Application"/>
+    		</manifest>
+		</jar>
+    </target>
+	
+	<target name="doc" depends="init" description="Generates the javadoc">
+        <!-- clean doc and recreate it -->
+        <delete dir="${doc}/api" />
+        
+		<!-- start javadoc util -->
+        <javadoc destdir="${doc}/api" access="private" author="true" version="true" use="true" windowtitle="TLACE Visualizer Javadoc" encoding="UTF-8" classpathref="project.classpath">
+            <packageset dir="${src}" />
+            <doctitle><![CDATA[<h1>TLACE Visualizer</h1>]]></doctitle>
+            <bottom><![CDATA[<i>Copyright &#169; 2011 Simon Busard - All Rights Reserved.</i>]]></bottom>
+			<link href="http://download.oracle.com/javase/6/docs/api/"/>
+			<link href="http://jung.sourceforge.net/doc/api/"/>
+        </javadoc>
+	</target>
+	
+    <!-- distribution target -->
+    <target name="dist" depends="jar, doc" description="Generates the distribution">
+    </target>
+    
+    <!-- cleaning target -->
+    <target name="clean" description="Cleans up">
+        <!-- Delete the ${build} and ${dist} directory trees -->
+        <delete dir="${build}" />
+        <delete dir="${doc}/api" />
+		<delete file="TRACE.jar"/>
+    </target>
+    
+</project>

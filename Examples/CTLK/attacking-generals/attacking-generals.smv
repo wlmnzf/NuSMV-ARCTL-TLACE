@@ -1,0 +1,127 @@
+-- Model of the attacking generals as exposed in
+--
+-- "Verifying Epistemic Properties of Multi-agent Systems
+-- via Bounded Model Checking" W. Penczek and A. Lomuscio
+--
+-- by Simon Busard <simon.busard@uclouvain.be>, 20/01/2011
+
+include(../nu-ctlk.m4)
+
+MODULE first-general(ENV, message, fightS)
+
+	AGENT(me, state)
+	VAR
+		state : {plan, wait, go, win, defeat};
+	IVAR
+		action : {nothing, attack, fight};
+	INIT
+		state = plan
+	-- Protocol
+	TTRANS(
+		action in case
+					state = plan : {nothing, attack};
+					state = wait : {nothing};
+					state = go : {fight};
+					state = win : {nothing};
+					state = defeat : {nothing};
+					1 : {nothing};
+				esac
+	)
+	-- Evolution function
+	TTRANS(
+		next(state) = case
+						state = plan & action = attack : wait;
+						state = wait & message : go;
+						state = go & action = fight & fightS : win;
+						state = go & action = fight & !fightS : defeat;
+						1 : state;
+					esac
+	)
+
+
+MODULE second-general(ENV, message, fightF)
+
+	AGENT(me, state)
+	VAR
+		state : {wait, attacking, go, win, defeat};
+	IVAR
+		action : {nothing, attack, fight};
+	INIT
+		state = wait
+	-- Protocol
+	TTRANS(
+		action in case
+					state = attacking : {attack};
+					state = wait : {nothing};
+					state = go : {fight};
+					state = win : {nothing};
+					state = defeat : {nothing};
+					1 : {nothing};
+				esac
+	)
+	-- Evolution function
+	TTRANS(
+		next(state) = case
+						state = wait & message : attacking;
+						state = attacking & action = attack : go;
+						state = go & action = fight & fightF : win;
+						state = go & action = fight & !fightF : defeat;
+						1 : state;
+					esac
+	)
+
+		
+MODULE environment(ENV, first, second)
+
+	AGENT(me, state)
+	VAR
+		state : {wait, deliverS, deliverF};
+	IVAR
+		action : {transmit, delay};
+	INIT
+		state = wait
+	-- Protocol
+	TTRANS(
+		action in {delay, transmit}
+	)
+	-- Evolution function
+	TTRANS(
+		next(state) = case
+						first != nothing & action = delay : deliverS;
+						second != nothing & action = delay : deliverF;
+						action = transmit : wait;
+						1 : state;
+					esac
+	)
+
+
+		
+MODULE main
+
+	VAR_ENV
+	VAR
+		fg : first-general(ENV, messageF, fightS);
+		sg : second-general(ENV, messageS, fightF);
+		e : environment(ENV, fg.action, sg.action);
+		
+	DEFINE messageF := e.action = transmit &
+						(e.state = deliverF | sg.action = attack);
+	DEFINE messageS := e.action = transmit &
+						(e.state = deliverS | fg.action = attack);
+	DEFINE fightF := fg.action = fight;
+	DEFINE fightS := sg.action = fight;
+	
+	-- Defined for specifications
+	DEFINE attack-order := !(	(fg.state = plan & sg.state = wait &
+									e.state = wait) |
+								(fg.state = wait & sg.state = wait &
+									e.state = deliverS));
+	DEFINE attack-ack := (fg.state = go | fg.state = win | fg.state = defeat);
+	DEFINE success := (fg.state = win & sg.state = win);
+	DEFINE fail := (fg.state = defeat & sg.state = defeat);
+	
+
+SPEC TAG(attack-order -> KK(sg.me, attack-order))
+SPEC TAG(attack-ack -> KK(fg.me, KK(sg.me, attack-order)))
+SPEC TEF(fail) & TEF(success)
+SPEC TEG(!KC(fg.me | sg.me,attack-ack))						

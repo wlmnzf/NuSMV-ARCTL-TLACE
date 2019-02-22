@@ -1,0 +1,116 @@
+Thu 5 Aug 2004 09:46:34  Roberto Cavada <cavada@irst.itc.it> 
+	* node/nodePrint.c: Added cases XOR and XNOR to print_sexp. 
+
+Wed 4 Aug 2004 14:06:11   Andrey Tchaltsev <tchaltsev@irst.itc.it>  Gavin Keighren <keighren@irst.itc.it> 
+	* docs/user-man/*: Added and fixed documentation.
+
+Wed 4 Aug 2004 13:28:35  Roberto Cavada <cavada@irst.itc.it>
+        * options -k and -l, if specified more than once, make nusmv emit an error 
+          message and go back to the shell. 
+        * checked the use of mutually exclusive options -v and -p in bmc_simulate.
+        * Filename patterns like @@@@k are now correcly expanded as @@k. 
+          Ahead of this fix, @k was expanded at first. 
+        * When unknown options are used with bmc_simulate, the command execution 
+          is now stopped.
+        * Fixed unregistered traces in check_invar_bmc_inc and check_invar_bmc.
+        * Other minor fixes.
+
+Wed 4 Aug 2004 10:10:40  Roberto Cavada <cavada@irst.itc.it>
+	* Factorized counterexample printing code in bmc
+	* In bmc, during checking commands current bounds and the
+	specification were printed out if neither counter-example nor
+	proof was found. Now only bounds are printed out to provide feedback
+	to users, and the specification text is printed only when the
+	verbosity level is greater than two. 
+
+Tue 3 Aug 2004 17:24:37  Roberto Cavada <cavada@irst.itc.it>
+	* Fixed memory leaks in bmc.
+	* Fixed a bug in BMC commands options handling. 
+
+Tue 3 Aug 2004 14:23:51  Andrey Tchaltsev <tchaltsev@irst.itc.it>
+	* New function in module 'be'. For a given be index the function
+	returns an associated cnf index, and viceversa. 
+
+Mon 2 Aug 2004 14:34:24  Roberto Cavada <cavada@irst.itc.it>  Gavin Keighren <keighren@irst.itc.it>
+        * The tutorial contains now a section about complete invariant 
+	checking.  
+	* Fixed description of system variable 'ag_only_search' in the
+	user manual.
+
+Thu 29 Jul 2004 14:43:41  Roberto Cavada <cavada@irst.itc.it>
+	* enc/symb/Encoding.c: Fixed a problem that occurred in bmc when
+	determinization variables were introduced, and variable ordering
+	file was used. 
+
+Thu 29 Jul 2004 13:30:58  Roberto Cavada <cavada@irst.itc.it>
+	* enc/symb/Encoding.{h,c}: Added method is_symbol_determ_var to
+	class Encoding. 
+	
+Wed 28 Jul 2004 15:33:04  Roberto Cavada <cavada@irst.itc.it> 
+	* bmc/*: Bug fix #275. Arrays variables are now allowed to occur in
+	formulae, but only if they are boolean arrays. 
+
+Wed 28 Jul 2004 11:31:53  Roberto Cavada <cavada@irst.itc.it> 
+	* enc/symb/Encoding.c: Bug fix #273. When grouping variables,
+	variables for determinization were missing. This made the encoding
+	with ordering file possibly buggy. 
+	
+Tue 27 Jul 2004 12:12:11  Andrey Tchaltsev <tchaltsev@irst.itc.it> 
+	* sat/* : Added support for incremental sat solvers.
+	* bmc/* : Added algorithms for incremental bmc. 
+
+Tue 27 Jul 2004 12:12:11  Roberto Cavada <cavada@irst.itc.it> 
+	* bmc/*: Adapted non incremental bmc to the new sat interface.
+	* bmc/*: Added een/sorensson algorithm for non incremental invar
+ 	checking.
+
+Mon 19 Jul 2004 12:05:52  Marco Roveri <roveri@irst.itc.it>
+	* mc/mcMc.c, ltl/ltl.c: fixed missing intersection with fair
+	states before invoking counter-example extraction.
+
+Mon 19 Jul 2004 11:54:09  Roberto Cavada <cavada@irst.itc.it>
+	* compile/compileFlatten.c: Fixed a bug that occurred when
+	instantiating more than once a variable whose range contained one
+	value only.
+	
+Thu 15 Jul 2004 15:52:54  Roveri <roveri@irst.itc.it> Cavada <cavada@irst.itc.it>
+	* bmc/bmcConv.c: bexpr -> be conversion caches results. This makes
+	convertion more efficient. 	
+
+	
+Wed 14 Jul 2004 14:11:47 Marco Roveri  <roveri@irst.itc.it>
+	* bmc/bmcSat.c: Fixed wrong allocation when sat solvers but SIM
+	were called 
+	
+
+Tue 13 Jul 2004 14:02:14 Roberto Cavada  <cavada@irst.itc.it>
+	* sm/smMist.c: Fixed behaviour of option -r in batch mode
+	
+
+Wed 23 Jun 2004 12:00:00 Roberto Cavada  <cavada@irst.itc.it>
+	* Released minor version 2.2.1
+
+	
+Mon 21 Jun 2004 16:16:51  Andrey TChaltsev <tchaltsev@irs.itc.it>  Cavada <cavada@irs.itc.it>
+	* Added platform-dependant suffix when searching for executable
+	files
+
+	
+Thu 17 Jun 2004 12:00:00 Roberto Cavada  <cavada@irst.itc.it>	
+	* compile/compileFlatten.c: Fixed ordering of insertion of vars.
+	
+	* enc/bdd/BddEnc: Changed initial variables index: one instead of
+	zero. This makes dynamic reordering fully working.
+
+	* compile/compileFlatten.c: Fixed one-value range management.
+
+	* examples/m4: Added m4 examples provided by Villemaire.
+
+	* sm/smMisc.c: Realigned -o option behaviour wrt what version 2.1
+	did. 
+
+
+Tue 15 Jun 2004 09:59:53  Roberto Cavada  <cavada@irst.itc.it>
+	* compile/compileCheck.c: Fixed missing type ARRAY when checking
+	for input vars in assignements.
+	

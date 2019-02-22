@@ -1,0 +1,21 @@
+\begin{nusmvCommand} {write\_order} {Writes variable order to file.}
+
+\cmdLine{write\_order [-h] [(-o | -f) order-file]}
+
+Writes the current order of BDD variables in the file specified via
+the \commandopt{o} option. If no option is specified the environment
+variable \envvar{output\_order\_file} will be considered. If the
+variable \envvar{output\_order\_file} is unset (or set to an empty
+value) then standard output will be used.
+
+\begin{cmdOpt}
+
+\opt{-o \parameter{\filename{order-file}}} {Sets the environment variable
+\envvar{output\_order\_file} to \filename{order-file} and then dumps the
+ordering list into that file.}
+
+\opt{-f \parameter{\filename{order-file}}}{ Alias for \commandopt{o} option. Supplied for
+backward compatibility.}
+
+\end{cmdOpt}
+\end{nusmvCommand}

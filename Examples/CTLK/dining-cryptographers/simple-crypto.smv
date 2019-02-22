@@ -1,0 +1,81 @@
+-- Model of the dining cryptographers as exposed in
+--
+-- "The Dining Cryptographers Problem: Unconditional Sender
+-- and Recipient Untraceability" D. Chaum
+--
+-- by Simon Busard <simon.busard@uclouvain.be>, 29/03/2011
+
+include(../nu-ctlk.m4)
+
+
+MODULE cryptographer(ENV, left, leftClaim, rightClaim)
+
+	VAR
+		payer:	boolean;
+		coin:	{none, head, tail};
+		claim:	{none, different, equal};
+		
+	AGENT(me, payer, coin, claim, left, leftClaim, rightClaim)
+	
+	INIT
+		coin = none & claim = none
+		
+	TTRANS(
+		next(payer) = payer
+	)
+	TTRANS(
+		next(coin) in case	coin = none: {head, tail};
+							1: coin; esac
+	)
+	TTRANS(
+		next(claim) = case	coin != none & claim = none:
+								case	left = coin & payer:	different;
+										left = coin & !payer:	equal;
+										left != coin & payer:	equal;
+										left != coin & !payer:	different;
+								esac;
+							1: claim; esac
+	)
+	
+	
+MODULE main
+	
+	VAR_ENV
+	VAR
+		a: cryptographer(ENV, c.coin, c.claim, b.claim);
+		b: cryptographer(ENV, a.coin, a.claim, c.claim);
+		c: cryptographer(ENV, b.coin, b.claim, a.claim);
+		
+	INIT
+		a.payer + b.payer + c.payer <= 1
+		
+	DEFINE odd :=	( ( (a.claim = different) +
+						(b.claim = different) +
+						(c.claim = different) ) mod 2 );
+	DEFINE even :=	( ( (a.claim = equal) +
+				  		(b.claim = equal) +
+						(c.claim = equal) ) mod 2 );
+					
+					
+
+-- If the number of "different" claims is odd, one of the cryptographers is the payer
+-- SPEC TAG(odd -> (a.payer | b.payer | c.payer)) -- is TRUE
+-- If the number of "different" claims is odd, a knows that one of the cryptographers is the payer
+-- SPEC TAG(odd -> KK(a.me, a.payer | b.payer | c.payer)) -- is TRUE
+-- If the number of "different" claims is even, nobody pays
+-- SPEC TAG(even -> !(a.payer | b.payer | c.payer)) -- is TRUE
+-- If the number of "different" claims is even, a knows that nobody pays
+-- SPEC TAG(even -> KK(a.me,!(a.payer | b.payer | c.payer))) -- is TRUE
+-- a never knows that b is the payer
+-- SPEC TAG(!KK(a.me, b.payer)) -- is TRUE
+
+-- If the number of "different" claims is odd and a knows he is not the payer, then a knows that b is the payer or a knows that c is the payer
+-- SPEC TAG((odd & KK(a.me, !a.payer)) -> (KK(a.me, b.payer) | KK(a.me, c.payer))) -- is FALSE
+-- a always finally knows that one of them is the payer
+-- SPEC TAF(KK(a.me, (a.payer | b.payer | c.payer))) -- is FALSE
+
+-- a always finally knows who is the payer
+--SPEC !a.payer -> TAF((KK(a.me, b.payer) | KK(a.me, c.payer))) -- is FALSE
+
+-- a always finally knows whether b knows whether a is the payer
+SPEC (TAF(KP(a.me, KP(b.me, a.payer)))) -- is FALSE

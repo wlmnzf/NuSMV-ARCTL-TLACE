@@ -1,0 +1,37 @@
+include(nu-ctlk.m4)
+
+MODULE agent(ENV)
+
+	VAR i : 0..3;
+	IVAR ai : boolean;
+
+	AGENT(me,i)
+	
+	INIT
+		i = 0
+	
+	TTRANS(
+		ai = case
+				i < 2 : 0;
+				1 : 1;
+			esac
+	)
+	TTRANS(
+		next(i) = case
+					ai : i+1;
+					1 : i;
+				esac
+	)
+
+
+MODULE main
+	
+	VAR_ENV
+	
+	VAR a : agent(ENV);
+	VAR b : agent(ENV);
+	
+	
+SPEC TAG(a.i < 3 -> KK(a.me,a.i < 3))
+SPEC !TEF(a.i = 2 & !KK(a.me,b.i = 2))
+SPEC !EAX(a.me)(b.i = 2)

@@ -1,0 +1,107 @@
+-- Model of the muddy children problem as exposed in
+--
+-- "Reasoning about Knowledge"
+-- R. Fagin, J. Y. Halpern, Y. Moses and M. Y. Vardi
+--
+-- by Simon Busard <simon.busard@uclouvain.be>, 19/01/2011
+
+include(../nu-ctlk.m4)
+
+-- muddys is the number of muddy children this child sees
+-- word is whether somebody says "yes"
+MODULE child(ENV, muddys, word)
+
+	VAR
+		forehead : {clean, muddy, uncertain};
+		i : 0..10;
+	IVAR
+		say : {no, yes};
+		
+	AGENT(me, forehead, i, muddys)
+	
+	INIT
+		forehead = uncertain & i = 0
+		
+	TTRANS(
+		say = case
+				i = muddys & forehead = uncertain : yes;
+				i < muddys & forehead = uncertain : no;
+				1 : yes;
+			esac
+	)
+	
+	TTRANS(
+		next(i)	 = case i < 10 : i + 1;
+						1 : i;
+					esac
+	)
+	
+	TTRANS(
+		next(forehead) = case
+							i = muddys & forehead = uncertain : muddy;
+							word & forehead = uncertain : clean;
+							1 : forehead;
+						esac
+	)
+
+
+MODULE main
+
+	VAR_ENV
+	
+	VAR
+		foreheads : array 0..5 of {clean, muddy};
+		c0 : child(ENV, muddys - (foreheads[0] = muddy), words);
+		c1 : child(ENV, muddys - (foreheads[1] = muddy), words);
+		c2 : child(ENV, muddys - (foreheads[2] = muddy), words);
+		c3 : child(ENV, muddys - (foreheads[3] = muddy), words);
+		c4 : child(ENV, muddys - (foreheads[4] = muddy), words);
+		c5 : child(ENV, muddys - (foreheads[5] = muddy), words);
+		
+	INIT
+		muddys >= 1
+		
+	DEFINE muddys := 	(foreheads[0] = muddy) + (foreheads[1] = muddy) +
+						(foreheads[2] = muddy) + (foreheads[3] = muddy) +
+						(foreheads[4] = muddy) + (foreheads[5] = muddy);
+	DEFINE words := 	(c0.say = yes) | (c1.say = yes) | (c2.say = yes) |
+						(c3.say = yes) | (c4.say = yes) | (c5.say = yes);
+
+	TRANS(
+		next(foreheads[0]) = foreheads[0] &
+		next(foreheads[1]) = foreheads[1] &
+		next(foreheads[2]) = foreheads[2] &
+		next(foreheads[3]) = foreheads[3] &
+		next(foreheads[4]) = foreheads[4] &
+		next(foreheads[5]) = foreheads[5]
+	)
+
+-- The first child always finally knows if he is muddy or not
+-- SPEC TAF(c0.forehead != uncertain)
+
+-- When the first child knows, he knows forever
+-- SPEC TAG(c0.forehead != uncertain -> TAF(c0.forehead != uncertain))
+
+-- When the first child knows, then he is true
+-- SPEC TAG(c0.forehead != uncertain -> c0.forehead = foreheads[0])
+
+-- If the first child knows that he is muddy, it is true
+-- SPEC TAG(KK(c0.me, c0.forehead = muddy) -> foreheads[0] = muddy)
+
+-- The first child always knows whether the second one is muddy or not
+-- SPEC TAG(foreheads[1] = muddy -> KK(c0.me, foreheads[1] = muddy))
+
+-- When the first child knows, the second child knows that he knows
+-- SPEC TAG(c0.forehead != uncertain -> KK(c1.me, c0.forehead != uncertain))
+
+-- If the first child is muddy, then there is always a moment where
+-- it is common knowledge that the first child is muddy
+-- SPEC foreheads[0] = muddy -> TAF(KC(c0.me | c1.me | c2.me | c3.me | c4.me | c5.me, foreheads[0] = muddy))
+
+-- If the first child is muddy, then it is not always common knowledge
+-- that he is muddy
+-- SPEC foreheads[0] = muddy -> !TAG(KC(c0.me | c1.me | c2.me | c3.me | c4.me | c5.me, foreheads[0] = muddy))
+
+-- If the first child is muddy, then it is always common knowledge, for other
+-- children, that he is muddy
+-- SPEC foreheads[0] = muddy -> TAG(KC(c1.me | c2.me | c3.me | c4.me | c5.me, foreheads[0] = muddy))

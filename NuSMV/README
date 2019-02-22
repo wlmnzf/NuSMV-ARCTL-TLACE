@@ -1,0 +1,67 @@
+NuSMV-ARCTL-TLACE is a modified version of NuSMV 2.2.2 (http://nusmv.fbk.eu/).  NuSMV 2.2.2 has been extended with two new functionalities.
+
+The first extension is the model checking of ARCTL, an extension of CTL including actions.  It has been mainly implemented by Franco Raimondi.  He has implemented the model checking algorithms. José Vander Meulen has then implemented the generation of counterexamples of ARCTL specifications.
+
+The second extension is the generation of enriched counterexamples: tree-like annotated counterexamples (TLACEs), implemented by Simon Busard.
+
+The provided version is a merge of the two extensions.  First, it allows to model check ARCTL specifications over SMV models, then it allows to generate TLACEs explaining why an (AR)CTL specification is not satisfied by a given model.
+
+
+------------
+INSTALLATION
+------------
+
+Standard procedure (linux)
+--------------------------
+
+To install the tool, use the standard installation procedure for NuSMV:
+
+cd cudd-2.3.0.1; make # Compile CUDD
+cd ../nusmv; ./configure
+make
+
+More information is given in nusmv/INSTALL.
+
+Mac OS X
+--------
+
+To install the tool on Mac OS X, use the following procedure:
+
+cd cudd-2.3.0.1; make -f Makefile_os_x_64bit # Compile CUDD using OS X makefile
+cd ../nusmv
+./configure CFLAGS="-m32" # Configure NuSMV to use gcc with -m32 option
+make
+
+More information is given in nusmv/INSTALL.
+
+
+-------------
+DOCUMENTATION
+-------------
+
+ARCTL
+-----
+
+Some information about the model checking of ARCTL can be found in the ARCTL/ directory. This directory contains a short document explaining what has been done and a CHANGELOG containing all the changes made to the initial version of NuSMV 2.2.2 by F. Raimondi.
+
+Some examples of model checking of ARCTL can be found in ARCTL/examples.
+
+
+TLACE
+-----
+
+A short manual is given in TLACE/manual.pdf.  It explains how to invoke the
+added functionalities.
+
+
+-------
+CONTENT
+-------
+
+This directory contains:
+	- an AUTHORS file giving the names and emails of people that developed
+	- the sources of CUDD (cudd-2.3.0.1/ directory) used by NuSMV to manipu
+	- the sources of NuSMV (nusmv/ directory).
+	- the ARCTL directory containing all given material about the ARCTL ext
+	- the TLACE directory containing a manual about the TLACE ext
+	- this file.

@@ -1,0 +1,30 @@
+MODULE main
+
+	VAR
+		i : boolean;
+		a : boolean;
+	IVAR
+		act : boolean;
+		
+	INIT
+		!i
+		
+	INVAR
+		a
+		
+	TRANS
+		next(i) =	case
+						!i : 1;
+						1 : 1;
+					esac
+	
+	TRANS
+		next(a) = a;
+		
+
+--SPEC !(REACHABLE(TRUE) & !a & !i)
+SPEC !(!a & !i)
+SPEC !E[!i U i]
+--SPEC !EG (!i | i)
+--SPEC !EX i
+--SPEC !EF(i & REACHABLE(act))

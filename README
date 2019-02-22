@@ -1,0 +1,7 @@
+This package contains two tools.
+
+NuSMV-ARCTL-TLACE is an extension of NuSMV (http://nusmv.fbk.eu/) grouping two implementations. First, the model checking of ARCTL has been implemented by Franco Raimondi. Second, the generation of TLACEs has been implemented by Simon Busard. More information is given in the NuSMV/ directory. This directory contains a README file.
+
+TLACE Visualizer is used to visualize and browse tree-like annotated counter-examples (TLACEs). It has been implemented by Simon Busard. More information is given in the TLACEVisualizer/ directory. This directory contains a README file.
+
+It also contains some examples of NuSMV models in CTL and CTLK. CTLK examples have to be preprocessed with M4 before giving them to NuSMV.

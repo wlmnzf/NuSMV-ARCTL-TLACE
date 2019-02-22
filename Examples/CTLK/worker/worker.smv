@@ -1,0 +1,51 @@
+-- Model of a simple worker
+--
+-- by Simon Busard <simon.busard@uclouvain.be>, 01/03/2011
+
+include(../nu-ctlk.m4)
+
+MODULE Switch(ENV)
+
+	VAR state : {powerup, poweroff, waiting};
+		
+	AGENT(me, state)
+	
+	INIT state = poweroff
+		
+	TTRANS(
+		next(state) in	case
+							state = powerup : 	poweroff;
+							state = poweroff :	waiting;
+							state = waiting :	{waiting, powerup};
+						esac)
+	
+
+MODULE Worker(ENV)
+
+	VAR state : {starting, poweroff, working, done};
+		
+	AGENT(me, state)
+	
+	INIT state = starting
+	
+	TTRANS(
+		next(state) =	case
+							state = starting :	working;
+							state = working :	done;
+							1 :					state;
+						esac)
+						
+						
+MODULE main
+
+	VAR_ENV
+	VAR
+		switch : Switch(ENV);
+		worker : Worker(ENV);
+		
+	DEFINE
+		off := (switch.state != powerup);
+		safe := (off & worker.state = done);
+		
+		
+SPEC TAU(KK(worker.me, off),KK(worker.me, safe))
